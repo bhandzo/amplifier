@@ -14,7 +14,8 @@
       ".vscode",
       ".claude",
       ".ai",
-      "~/amplifier"
+      "~/Developer/amplifier",
+      "~/Dropbox/amplifier-data"
     ]
   },
   "enableAllProjectMcpServers": false,
