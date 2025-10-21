@@ -2,14 +2,20 @@
   "mcpServers": {
     "browser-use": {
       "command": "uvx",
-      "args": ["browser-use[cli]==0.5.10", "--mcp"],
+      "args": [
+        "browser-use[cli]==0.5.10",
+        "--mcp"
+      ],
       "env": {
         "OPENAI_API_KEY": "${OPENAI_API_KEY}"
       }
     },
     "context7": {
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
     },
     "deepwiki": {
       "type": "http",
@@ -17,7 +23,11 @@
     },
     "repomix": {
       "command": "npx",
-      "args": ["-y", "repomix", "--mcp"]
+      "args": [
+        "-y",
+        "repomix",
+        "--mcp"
+      ]
     },
     "zen": {
       "command": "uvx",
@@ -26,6 +36,10 @@
         "git+https://github.com/BeehiveInnovations/zen-mcp-server.git",
         "zen-mcp-server"
       ]
+    },
+    "notion": {
+      "type": "http",
+      "url": "https://mcp.notion.com/mcp"
     }
   }
 }
