@@ -164,52 +164,62 @@ Conversation:
 Context: {json.dumps(context or {})}
 """
 
+        client = None
         try:
+            client = ClaudeSDKClient(  # type: ignore
+                options=ClaudeCodeOptions(  # type: ignore
+                    system_prompt="You extract memories from conversations.",
+                    max_turns=1,
+                    model=self.config.memory_extraction_model,
+                )
+            )
+            await client.connect()
+
             async with asyncio.timeout(self.config.memory_extraction_timeout):
-                async with ClaudeSDKClient(  # type: ignore
-                    options=ClaudeCodeOptions(  # type: ignore
-                        system_prompt="You extract memories from conversations.",
-                        max_turns=1,
-                        model=self.config.memory_extraction_model,
-                    )
-                ) as client:
-                    await client.query(prompt)
+                await client.query(prompt)
 
-                    response = ""
-                    async for message in client.receive_response():
-                        if hasattr(message, "content"):
-                            content = getattr(message, "content", [])
-                            if isinstance(content, list):
-                                for block in content:
-                                    if hasattr(block, "text"):
-                                        response += getattr(block, "text", "")
+                response = ""
+                async for message in client.receive_response():
+                    if hasattr(message, "content"):
+                        content = getattr(message, "content", [])
+                        if isinstance(content, list):
+                            for block in content:
+                                if hasattr(block, "text"):
+                                    response += getattr(block, "text", "")
 
-                    # Clean and parse response
-                    cleaned = response.strip()
-                    if cleaned.startswith("```json"):
-                        cleaned = cleaned[7:]
-                    elif cleaned.startswith("```"):
-                        cleaned = cleaned[3:]
-                    if cleaned.endswith("```"):
-                        cleaned = cleaned[:-3]
-                    cleaned = cleaned.strip()
+                # Clean and parse response
+                cleaned = response.strip()
+                if cleaned.startswith("```json"):
+                    cleaned = cleaned[7:]
+                elif cleaned.startswith("```"):
+                    cleaned = cleaned[3:]
+                if cleaned.endswith("```"):
+                    cleaned = cleaned[:-3]
+                cleaned = cleaned.strip()
 
-                    if cleaned:
-                        data = json.loads(cleaned)
-                        return [
-                            Memory(
-                                content=item["content"],
-                                category=item["category"],
-                                metadata={**item.get("metadata", {}), **(context or {})},
-                            )
-                            for item in data
-                        ]
+                if cleaned:
+                    data = json.loads(cleaned)
+                    return [
+                        Memory(
+                            content=item["content"],
+                            category=item["category"],
+                            metadata={**item.get("metadata", {}), **(context or {})},
+                        )
+                        for item in data
+                    ]
         except TimeoutError:
             logger.warning(f"Claude Code SDK timed out after {self.config.memory_extraction_timeout} seconds")
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse extraction response: {e}")
         except Exception as e:
             logger.error(f"Claude Code SDK extraction error: {e}")
+        finally:
+            # CRITICAL: Always disconnect to clean up subprocess, even on timeout/error
+            if client:
+                try:
+                    await client.disconnect()
+                except Exception as e:
+                    logger.error(f"Error during client cleanup: {e}")
 
         return []
 
@@ -245,54 +255,58 @@ Extract and return as JSON:
 Focus on technical decisions, problems solved, user preferences, and important patterns.
 Return ONLY valid JSON."""
 
+        client = None
         try:
             logger.info(f"[EXTRACTION] Setting timeout to {self.config.memory_extraction_timeout} seconds")
-            async with asyncio.timeout(self.config.memory_extraction_timeout):
-                logger.info(
-                    f"[EXTRACTION] Creating Claude Code SDK client with model: {self.config.memory_extraction_model}"
+            logger.info(
+                f"[EXTRACTION] Creating Claude Code SDK client with model: {self.config.memory_extraction_model}"
+            )
+
+            client = ClaudeSDKClient(  # type: ignore
+                options=ClaudeCodeOptions(  # type: ignore
+                    system_prompt="You are a memory extraction expert. Extract key information from conversations.",
+                    max_turns=1,
+                    model=self.config.memory_extraction_model,
                 )
-                async with ClaudeSDKClient(  # type: ignore
-                    options=ClaudeCodeOptions(  # type: ignore
-                        system_prompt="You are a memory extraction expert. Extract key information from conversations.",
-                        max_turns=1,
-                        model=self.config.memory_extraction_model,
-                    )
-                ) as client:
-                    logger.info("[EXTRACTION] Querying Claude Code SDK")
-                    await client.query(prompt)
+            )
+            await client.connect()
 
-                    logger.info("[EXTRACTION] Receiving response from Claude Code SDK")
-                    response = ""
-                    async for message in client.receive_response():
-                        if hasattr(message, "content"):
-                            content = getattr(message, "content", [])
-                            if isinstance(content, list):
-                                for block in content:
-                                    if hasattr(block, "text"):
-                                        response += getattr(block, "text", "")
+            async with asyncio.timeout(self.config.memory_extraction_timeout):
+                logger.info("[EXTRACTION] Querying Claude Code SDK")
+                await client.query(prompt)
 
-                    logger.info(f"[EXTRACTION] Received response length: {len(response)}")
+                logger.info("[EXTRACTION] Receiving response from Claude Code SDK")
+                response = ""
+                async for message in client.receive_response():
+                    if hasattr(message, "content"):
+                        content = getattr(message, "content", [])
+                        if isinstance(content, list):
+                            for block in content:
+                                if hasattr(block, "text"):
+                                    response += getattr(block, "text", "")
 
-                    if not response:
-                        logger.warning("[EXTRACTION] Empty response from Claude Code SDK")
-                        return None
+                logger.info(f"[EXTRACTION] Received response length: {len(response)}")
 
-                    # Clean and parse JSON
-                    cleaned = response.strip()
-                    if cleaned.startswith("```json"):
-                        cleaned = cleaned[7:]
-                    elif cleaned.startswith("```"):
-                        cleaned = cleaned[3:]
-                    if cleaned.endswith("```"):
-                        cleaned = cleaned[:-3]
-                    cleaned = cleaned.strip()
+                if not response:
+                    logger.warning("[EXTRACTION] Empty response from Claude Code SDK")
+                    return None
 
-                    logger.info("[EXTRACTION] Parsing JSON response")
-                    data = json.loads(cleaned)
-                    data["metadata"] = {"extraction_method": "claude_sdk", "timestamp": datetime.now().isoformat()}
+                # Clean and parse JSON
+                cleaned = response.strip()
+                if cleaned.startswith("```json"):
+                    cleaned = cleaned[7:]
+                elif cleaned.startswith("```"):
+                    cleaned = cleaned[3:]
+                if cleaned.endswith("```"):
+                    cleaned = cleaned[:-3]
+                cleaned = cleaned.strip()
 
-                    logger.info(f"[EXTRACTION] Successfully extracted: {len(data.get('memories', []))} memories")
-                    return data
+                logger.info("[EXTRACTION] Parsing JSON response")
+                data = json.loads(cleaned)
+                data["metadata"] = {"extraction_method": "claude_sdk", "timestamp": datetime.now().isoformat()}
+
+                logger.info(f"[EXTRACTION] Successfully extracted: {len(data.get('memories', []))} memories")
+                return data
 
         except TimeoutError:
             logger.warning(
@@ -305,6 +319,14 @@ Return ONLY valid JSON."""
             import traceback
 
             logger.error(f"[EXTRACTION] Traceback: {traceback.format_exc()}")
+        finally:
+            # CRITICAL: Always disconnect to clean up subprocess, even on timeout/error
+            if client:
+                try:
+                    await client.disconnect()
+                    logger.info("[EXTRACTION] Client disconnected successfully")
+                except Exception as e:
+                    logger.error(f"[EXTRACTION] Error during client cleanup: {e}")
 
         return None
 
