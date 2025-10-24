@@ -4,12 +4,12 @@
 [submodule "phoenix"]
 	path = phoenix
 	url = https://github.com/Dubsado/phoenix.git
-[submodule "product-kitchen"]
-	path = product-kitchen
-	url = https://github.com/Dubsado/product-kitchen.git
 [submodule "product-playground"]
 	path = product-playground
 	url = https://github.com/Dubsado/product-playground.git
 [submodule "nfelo_supercontest"]
 	path = nfelo_supercontest
 	url = https://github.com/bhandzo/nfelo_supercontest.git
+[submodule "extra-point-data"]
+	path = extra-point-data
+	url = https://github.com/Extra-Point/extra-point-data.git

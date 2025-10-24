@@ -7,7 +7,7 @@ line-length = 120
 # Target Python 3.11+
 target-version = "py311"
 
-# Exclude generated and build directories
+# Exclude generated and build directories and git submodules
 extend-exclude = [
     ".venv",
     "venv",
@@ -15,6 +15,12 @@ extend-exclude = [
     "*.pyc",
     ".web",
     "node_modules",
+    # Git submodules
+    "flameweeder",
+    "nfelo_supercontest",
+    "phoenix",
+    "product-playground",
+    "extra-point-data",
 ]
 
 [format]

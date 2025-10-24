@@ -128,6 +128,22 @@ def is_legitimate_pattern(filepath, line_num, line):
         except Exception:
             pass
 
+    # Exception class definitions with empty pass bodies are legitimate
+    if "pass" in line and line.strip() == "pass":
+        try:
+            with open(filepath, encoding="utf-8") as f:
+                lines = f.readlines()
+                # Look backwards for class definition
+                for i in range(max(0, line_num - 3), line_num):
+                    # Check if we have "class SomeError(BaseError):" pattern
+                    if re.search(r"class\s+\w+.*\(.*Error.*\):", lines[i]):
+                        return True
+                    # Also check for Exception base class
+                    if re.search(r"class\s+\w+.*\(.*Exception.*\):", lines[i]):
+                        return True
+        except Exception:
+            pass
+
     return False
 
 

@@ -64,6 +64,12 @@ exclude = [
     "dist/**",
     ".data/**",
     "ai_working/**",
+    # Git submodules
+    "flameweeder/**",
+    "nfelo_supercontest/**",
+    "phoenix/**",
+    "product-playground/**",
+    "extra-point-data/**",
 ]
 typeCheckingMode = "basic"
 reportMissingImports = false
