@@ -10,3 +10,6 @@
 [submodule "product-playground"]
 	path = product-playground
 	url = https://github.com/Dubsado/product-playground.git
+[submodule "nfelo_supercontest"]
+	path = nfelo_supercontest
+	url = https://github.com/bhandzo/nfelo_supercontest.git
