@@ -28,8 +28,10 @@ class MemoryExtractionConfig(BaseSettings):
     )
 
     # Extraction configuration
+    # CRITICAL: Must be less than 60s (hook timeout) with buffer for cleanup
     memory_extraction_timeout: int = Field(
-        default=120, description="Timeout in seconds for Claude Code SDK extraction operations"
+        default=45,
+        description="Timeout in seconds for Claude Code SDK extraction operations (must be < 60s hook timeout)",
     )
 
     memory_extraction_max_messages: int = Field(

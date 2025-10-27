@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import psutil
+
 sys.path.append(str(Path(__file__).parent.parent))
 from memory.models import Memory
 
@@ -58,6 +60,44 @@ class MemoryExtractor:
             )
 
         logger.info("[EXTRACTION] Claude Code SDK and CLI verified - ready for extraction")
+
+    def _kill_process_tree(self, pid: int) -> None:
+        """Kill a process and all its children aggressively.
+
+        Args:
+            pid: Process ID to kill along with its children
+        """
+        try:
+            parent = psutil.Process(pid)
+            children = parent.children(recursive=True)
+
+            # Kill children first (bottom-up)
+            for child in children:
+                try:
+                    logger.debug(f"[EXTRACTION] Killing child process {child.pid}")
+                    child.kill()
+                except psutil.NoSuchProcess:
+                    pass
+
+            # Kill parent
+            logger.debug(f"[EXTRACTION] Killing parent process {pid}")
+            parent.kill()
+
+            # Wait for termination with timeout
+            gone, alive = psutil.wait_procs(children + [parent], timeout=3)
+
+            # Force kill any survivors
+            for p in alive:
+                try:
+                    logger.warning(f"[EXTRACTION] Force killing stubborn process {p.pid}")
+                    p.kill()
+                except psutil.NoSuchProcess:
+                    pass
+
+        except psutil.NoSuchProcess:
+            logger.debug(f"[EXTRACTION] Process {pid} already gone")
+        except Exception as e:
+            logger.error(f"[EXTRACTION] Error killing process tree {pid}: {e}")
 
     async def extract_memories(self, text: str, context: dict[str, Any] | None = None) -> list[Memory]:
         """Extract memories from text using Claude Code SDK
