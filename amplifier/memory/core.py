@@ -7,6 +7,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+# Import centralized path configuration
+from amplifier.config.paths import paths
+
 from .models import Memory
 from .models import StoredMemory
 
@@ -25,10 +28,11 @@ class MemoryStore:
         """Initialize memory store
 
         Args:
-            data_dir: Directory for data storage, defaults to .data
+            data_dir: Directory for data storage, defaults to centralized data_dir/memories
             max_memories: Maximum number of memories to keep
         """
-        self.data_dir = data_dir or Path(".data")
+        # Use centralized path config if no data_dir provided
+        self.data_dir = data_dir or (paths.data_dir / "memories")
         self.data_file = self.data_dir / "memory.json"
         self.max_memories = max_memories
 

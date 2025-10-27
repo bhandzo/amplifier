@@ -221,6 +221,17 @@ Context: {json.dumps(context or {})}
                 except Exception as e:
                     logger.error(f"Error during client cleanup: {e}")
 
+                # Nuclear option: Force kill any remaining Claude CLI processes spawned by this extraction
+                try:
+                    subprocess.run(
+                        ["pkill", "-9", "-f", "claude.*memory extraction expert"],
+                        timeout=2,
+                        check=False,
+                        capture_output=True,
+                    )
+                except Exception as e:
+                    logger.debug(f"Force cleanup failed: {e}")
+
         return []
 
     async def _extract_with_claude_full(self, conversation: str, context: str | None) -> dict[str, Any] | None:
@@ -327,6 +338,17 @@ Return ONLY valid JSON."""
                     logger.info("[EXTRACTION] Client disconnected successfully")
                 except Exception as e:
                     logger.error(f"[EXTRACTION] Error during client cleanup: {e}")
+
+                # Nuclear option: Force kill any remaining Claude CLI processes spawned by this extraction
+                try:
+                    subprocess.run(
+                        ["pkill", "-9", "-f", "claude.*memory extraction expert"],
+                        timeout=2,
+                        check=False,
+                        capture_output=True,
+                    )
+                except Exception as e:
+                    logger.debug(f"[EXTRACTION] Force cleanup failed: {e}")
 
         return None
 
