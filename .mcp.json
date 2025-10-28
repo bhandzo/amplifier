@@ -7,7 +7,7 @@
         "--mcp"
       ],
       "env": {
-        "OPENAI_API_KEY": "${OPENAI_API_KEY}"
+        "OPENAI_API_KEY": "your-api-key-here"
       }
     },
     "context7": {
@@ -40,6 +40,15 @@
     "notion": {
       "type": "http",
       "url": "https://mcp.notion.com/mcp"
+    },
+    "things": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/Users/benhandzo/Developer/things-mcp/",
+        "run",
+        "things_server.py"
+      ]
     }
   }
 }
