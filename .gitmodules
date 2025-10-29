@@ -1,9 +1,6 @@
 [submodule "flameweeder"]
 	path = flameweeder
 	url = https://github.com/bhandzo/flameweeder.git
-[submodule "phoenix"]
-	path = phoenix
-	url = https://github.com/Dubsado/phoenix.git
 [submodule "product-playground"]
 	path = product-playground
 	url = https://github.com/Dubsado/product-playground.git
