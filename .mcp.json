@@ -49,6 +49,16 @@
         "run",
         "things_server.py"
       ]
+    },
+    "firecrawl-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firecrawl-mcp"
+      ],
+      "env": {
+        "FIRECRAWL_API_KEY": "fc-3d3ce2a64a164d448bd7d91e1cc219de"
+      }
     }
   }
 }
